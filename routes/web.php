@@ -29,13 +29,37 @@ $router->options(
 $router->group(['namespace' => API_VERSION, 'prefix' => API_VERSION, 'middleware' => 'cors'], function () use ($router) {
     $router->post('/login', ['uses' => 'UserController@login']);
     $router->post('/register', ['uses' => 'UserController@register']);
-    $router->get('/index', ['uses' => 'UserController@index']);
-    $router->put('/edit/{id}', ['uses' => 'UserController@edit']);
-    $router->get('/show/{id}', ['uses' => 'UserController@show']);
-
+    $router->post('/forgot-password', ['uses' => 'UserController@forgotPassword']);
+    $router->post('/change-password', ['uses' => 'UserController@changePassword']);
 });
 
 /** Routes with auth */
 $router->group(['namespace' => API_VERSION, 'prefix' => API_VERSION, 'middleware' => 'cors|jwt'], function () use ($router) {
+    $router->group(['prefix' => 'user'], function () use ($router) {
+        $router->get('/', ['uses' => 'UserController@get']);
+        $router->patch('/', ['uses' => 'UserController@update']);
+    });
 
+    $router->group(['prefix' => 'admin', 'middleware' => 'admin'], function () use ($router) {
+        $router->get('/users', ['uses' => 'AdminController@getUsers']);
+        $router->group(['prefix' => 'user'], function () use ($router) {
+            $router->post('/', ['uses' => 'AdminController@createUser']);
+            $router->patch('/{id}', ['uses' => 'AdminController@updateUser']);
+            $router->delete('/{id}', ['uses' => 'AdminController@deleteUser']);
+        });
+    });
+
+    $router->group(['prefix' => 'tasks'], function () use ($router) {
+        $router->get('/', ['uses' => 'TaskController@getTasks']);
+        $router->patch('/', ['uses' => 'TaskController@updateTask']);
+    });
+
+    $router->group(['prefix' => 'admin', 'middleware' => 'admin'], function () use ($router) {
+        $router->get('/tasks', ['uses' => 'TaskController@getTasks']);
+        $router->group(['prefix' => 'tasks'], function () use ($router) {
+            $router->post('/', ['uses' => 'TaskController@createTask']);
+            $router->patch('/{id}', ['uses' => 'TaskController@updateTask']);
+            $router->delete('/{id}', ['uses' => 'TaskController@deleteTask']);
+        });
+    });
 });

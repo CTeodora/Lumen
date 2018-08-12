@@ -4,8 +4,22 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * Class Task
+ *
+ * @package App
+ */
 class Task extends Model
 {
+
+
+    /** @var int */
+    const STATUS_ACTIVE = 1;
+
+    /** @var int */
+    const STATUS_INACTIVE = 0;
+
+    
     /**
      * The attributes that are mass assignable.
      *
@@ -28,7 +42,9 @@ class Task extends Model
     ];
 
     /**
-     * Get the user that owns the task.
+     * Get the user that created the task.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function user()
     {
@@ -37,9 +53,31 @@ class Task extends Model
 
     /**
      * Get the user that owns the task.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function assignTo()
+    public function assign()
     {
         return $this->belongsTo('App\User', 'assign', 'id');
+    }
+
+    /**
+     * Get task comments
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function comments()
+    {
+        return $this->hasMany('App\Comment');
+    }
+
+    /**
+     * Get task logs
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function logs()
+    {
+        return $this->hasMany('App\Log');
     }
 }

@@ -4,20 +4,25 @@ namespace App;
 
 use GenTux\Jwt\JwtPayloadInterface;
 use Illuminate\Auth\Authenticatable;
-use Illuminate\Hashing\BycryptHasher;
 use Laravel\Lumen\Auth\Authorizable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Contracts\Auth\Access\Authorizable as AuthorizableContract;
 
+/**
+ * Class User
+ *
+ * @package App
+ */
 class User extends Model implements AuthenticatableContract, AuthorizableContract, JwtPayloadInterface
 {
     use Authenticatable, Authorizable;
 
+    /** @var int */
+    const STATUS_ACTIVE = 1;
 
-    const STATUS_UNCONFIRMED = 0;
-    
-    const STATUS_CONFIRMED = 1;
+    /** @var int */
+    const STATUS_INACTIVE = 0;
 
     /**
      * The attributes that are mass assignable.
@@ -25,7 +30,11 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
      * @var array
      */
     protected $fillable = [
-        'name', 'email','role_id', 'status'
+        'name',
+        'email',
+        'role_id',
+        'status',
+        'forgot_code'
     ];
 
     /**
@@ -37,6 +46,17 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
         'password',
     ];
 
+    protected $visible = [
+        'name',
+        'email',
+        'role_id'
+    ];
+
+    /**
+     * Jwt payload
+     *
+     * @return array
+     */
     public function getPayload()
     {
         return [
@@ -48,9 +68,34 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
         ];
     }
 
+    /**
+     * User role
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
     public function role()
     {
         return $this->belongsTo('App/Role');
+    }
+
+    /**
+     * User assigned tasks
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function tasks()
+    {
+        return $this->hasMany('App/Task', 'assign', 'id');
+    }
+
+    /**
+     * User notifications
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function notifications()
+    {
+        return $this->hasMany('App/Notification');
     }
 
     /**
@@ -79,21 +124,4 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
 
         return false;
     }
-
-    public function create($userName,$userEmail,$userPassword){
-        $user = new User;
-        $user->name = $userName;
-        $user->email = $userEmail;
-        $user->password = $userPassword;
-        $user->save();
-    }
-
-    public function updateUser($userName,$userEmail,$userPassword,$id){
-        $user = User::find($id);
-        $user->name = $userName;
-        $user->email = $userEmail;
-        $user->password = $userPassword;
-        $user->save();       
-    }
-
 }
